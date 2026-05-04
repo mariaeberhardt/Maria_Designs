@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof -nP -iTCP:8000 -sTCP:LISTEN)",
+      "Bash(ipconfig getifaddr *)"
+    ]
+  }
+}
