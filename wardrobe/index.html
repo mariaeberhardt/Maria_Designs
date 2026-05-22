@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="theme-color" content="#ffffff" />
+<title>Wardrobe</title>
+<style>
+  /* Fonts borrowed from sibling pinpoint_v2 project */
+  @font-face {
+    font-family: 'GT Super Display';
+    src: url('../pinpoint_v2/fonts/GT-Super/GT-Super-Display-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Neue Montreal';
+    src: url('../pinpoint_v2/fonts/NeueMontreal/NeueMontreal-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Neue Montreal';
+    src: url('../pinpoint_v2/fonts/NeueMontreal/NeueMontreal-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Roboto Mono';
+    src: url('../pinpoint_v2/fonts/Roboto_Mono/RobotoMono-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Neue Montreal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 400;
+    background: #efece6;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: contain;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 390px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    position: relative;
+  }
+
+  /* Header */
+  .header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 16px 12px;
+    height: 60px;
+  }
+  .brand {
+    font-family: 'GT Super Display', Georgia, serif;
+    font-weight: 300;
+    font-size: 28px;
+    letter-spacing: 0.2px;
+    color: #0e0e0e;
+    line-height: 1;
+  }
+
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 16px 96px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Collage card — clean white, holds the hero image plus the prompt bar */
+  .collage-card {
+    position: relative;
+    background: #fff;
+    border-radius: 0;
+    padding: 0;
+  }
+  .collage {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    max-height: 380px;
+    border: 1px solid #ECECEC;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+    overflow: hidden;
+  }
+  .collage .hero {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    border-radius: 18px;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  /* Invisible tap zones layered on top of the hero image */
+  .collage .item {
+    position: absolute;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    border-radius: 8px;
+    transition: background 0.25s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .collage .item:focus,
+  .collage .item:focus-visible { outline: none; }
+  .collage .item:active { transform: scale(0.97); }
+  .collage .item.pulse { animation: pulseBump 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes pulseBump {
+    0%   { background: rgba(11, 81, 245, 0); }
+    40%  { background: rgba(11, 81, 245, 0.18); }
+    100% { background: rgba(11, 81, 245, 0); }
+  }
+
+  /* Tap-zone positions mapped to the contained p6_outfit.jpg.
+     The image is letterboxed ~14.5% on each side inside the 380px container,
+     so the original image-space % are scaled into the painted band. */
+  .item.earrings { top: 6%;  left: 35.8%; width: 18.4%; height: 15%; }
+  .item.top      { top: 6%;  left: 47.9%; width: 33.3%; height: 49%; }
+  .item.birkin   { top: 22%; left: 16%;   width: 22.7%; height: 31%; }
+  .item.skirt    { top: 54%; left: 47.2%; width: 32.6%; height: 30%; }
+  .item.boot     { top: 50%; left: 23%;   width: 24.1%; height: 49%; }
+
+  /* Prompt row: logo on the left + text pill on the right */
+  .prompt-row {
+    margin: 8px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .prompt-avatar {
+    flex: 0 0 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .prompt-avatar img {
+    display: block;
+    width: 36px;
+    height: auto;
+  }
+  .prompt {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid #ECECEC;
+    border-radius: 18px;
+    background: #fff;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .prompt:active { background: #fafafa; }
+  .prompt-text {
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 13.5px;
+    color: #2b2b2b;
+    line-height: 1.35;
+  }
+
+  /* Section title */
+  .section-title {
+    margin: 22px 0 2px;
+    font-family: 'GT Super Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: #111;
+    letter-spacing: -0.1px;
+  }
+  .section-sub {
+    margin: 0 0 12px;
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 13px;
+    color: #3A815B;
+    font-weight: 500;
+  }
+
+  /* Product list */
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .row > .product { flex: 1; min-width: 0; }
+  .check {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1.5px solid #d4d4d4;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.18s ease, border-color 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check::before { content: ''; position: absolute; inset: -10px; }
+  .check svg {
+    width: 13px;
+    height: 13px;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .row.selected .check {
+    background: #0B51F5;
+    border-color: #0B51F5;
+  }
+  .row.selected .check svg { opacity: 1; }
+
+  .product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #ECECEC;
+    border-radius: 14px;
+    padding: 12px;
+    background: #fff;
+    text-decoration: none;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
+  }
+  .product:active { background: #fafafa; }
+  .thumb {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .brand-name {
+    display: block;
+    font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: #9a9a9a;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    line-height: 1.2;
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .product-name {
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #0e0e0e;
+    margin: 0 0 3px;
+    line-height: 1.2;
+  }
+  .prices {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 12px;
+    color: #2b2b2b;
+    margin-bottom: 3px;
+    font-weight: 400;
+  }
+  .prices > span:not(.dot):not(.strike) { font-weight: 500; }
+  .prices .dot { color: #c2c2c2; font-weight: 400; }
+  .prices .strike { text-decoration: line-through; color: #8a8a8a; font-weight: 400; }
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 12px;
+    color: #8a8a8a;
+    font-weight: 400;
+  }
+  .meta .dot { color: #c2c2c2; }
+  .pill-green {
+    color: #3A815B;
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .chevron {
+    flex: 0 0 18px;
+    color: #b9b9b9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chevron svg { width: 16px; height: 16px; }
+
+  /* Gray "purchased with Phia on …" line that replaces price/source */
+  .purchased-note {
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 12px;
+    color: #8a8a8a;
+    font-weight: 400;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  /* Birkin promo CTA — replaces the priced card with a single serif line */
+  .birkin-promo .product { align-items: center; }
+  .birkin-promo .chevron { color: #0e0e0e; }
+  .birkin-promo .chevron svg { stroke-width: 3; }
+  .promo-text {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    text-align: center;
+    font-family: 'GT Super Display', Georgia, serif;
+    font-weight: 300;
+    font-size: 20px;
+    color: #0e0e0e;
+    line-height: 1.2;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Two-card pricing summary at the bottom of the shop list */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .summary-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #ECECEC;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: #fff;
+  }
+  .tag-icon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #E8F1E5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3A815B;
+  }
+  .tag-icon.dark {
+    background: #ECECEC;
+    color: #0e0e0e;
+  }
+  .tag-icon svg { width: 18px; height: 18px; }
+  .summary-text { display: flex; flex-direction: column; line-height: 1.1; }
+  .summary-label {
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 12px;
+    color: #8a8a8a;
+    margin-bottom: 4px;
+    font-weight: 400;
+  }
+  .summary-value {
+    font-family: 'GT Super Display', Georgia, serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: #3A815B;
+    letter-spacing: 0.2px;
+    line-height: 1;
+  }
+  .summary-value.black { color: #0e0e0e; }
+
+  /* Floating summary — slides in while scrolling */
+  .floating-summary {
+    position: fixed;
+    left: 50%;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    z-index: 19;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    font-family: 'Neue Montreal', sans-serif;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.96);
+    transform-origin: bottom center;
+    pointer-events: none;
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .floating-summary.visible {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    pointer-events: auto;
+  }
+  .fs-item { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.05; }
+  .fs-label {
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .fs-value {
+    font-family: 'GT Super Display', Georgia, serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: #0e0e0e;
+    letter-spacing: 0.2px;
+    line-height: 1;
+  }
+  .fs-value.green { color: #3A815B; }
+  .fs-divider { width: 1px; height: 26px; background: rgba(0, 0, 0, 0.10); }
+
+  /* Footer — fixed at the bottom with floating buttons */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 390px;
+    background: transparent;
+    padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .footer > * { pointer-events: auto; }
+  .back-pill {
+    flex: 0 0 auto;
+    height: 54px;
+    width: 60px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #111;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), inset 0 0 0 0.5px rgba(255,255,255,0.4);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .back-pill svg { width: 26px; height: 26px; display: block; }
+
+  .btn {
+    flex: 1;
+    height: 54px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Neue Montreal', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: #fff;
+    color: #111;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-primary {
+    background: #0e0e0e;
+    color: #fff;
+    border-color: #0e0e0e;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.20);
+  }
+  .btn-primary svg { color: #fff; width: 17px; height: 17px; }
+
+  /* Row flash effect when its matching collage item is tapped */
+  .row.flash .product {
+    animation: rowFlash 0.9s ease;
+  }
+  @keyframes rowFlash {
+    0%   { background: #fff; box-shadow: 0 0 0 0 rgba(11, 81, 245, 0.0); }
+    25%  { background: #EEF2FF; box-shadow: 0 0 0 4px rgba(11, 81, 245, 0.15); }
+    100% { background: #fff; box-shadow: 0 0 0 0 rgba(11, 81, 245, 0.0); }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">Wardrobe</div>
+    </header>
+
+    <main class="scroll">
+      <section class="collage-card">
+        <div class="collage" id="collage">
+          <img class="hero" src="images/p6_outfit.jpg" alt="Outfit collage: black Birkin, white draped top, gold knot earrings, black mini skirt, knee-high boots" />
+          <button class="item earrings" data-target="earrings" aria-label="Shop earrings"></button>
+          <button class="item top" data-target="top" aria-label="Shop draped knit top"></button>
+          <button class="item birkin" data-target="birkin" aria-label="Shop Birkin bag"></button>
+          <button class="item skirt" data-target="skirt" aria-label="Shop button mini skort"></button>
+          <button class="item boot" data-target="boot" aria-label="Shop knee-high boots"></button>
+        </div>
+
+        <div class="prompt-row">
+          <div class="prompt-avatar"><img src="images/p7_logo.png" alt="" /></div>
+          <div class="prompt" role="button" aria-label="Edit prompt">
+            <div class="prompt-text">dinner and drinks at Monkey Bar with my college girlfriends, any ideas?</div>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="section-title">Shop the look</h2>
+      <p class="section-sub"><span class="item-count">5</span> items</p>
+
+      <div class="list" id="list">
+        <div class="row selected" data-id="top" data-price="317" data-retail="360">
+          <button class="check" aria-label="Toggle selection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+          <a class="product" href="https://editorialist.com/p/vince-cowl-neck-silk-blouse-32397761/?sku=26859700&amp;pla=true&amp;utm_source=pinterest&amp;utm_medium=social_pinterest&amp;utm_campaign=pinterest" target="_blank" rel="noopener noreferrer">
+            <div class="thumb"><img src="images/p1_whitetop.webp" alt="White cowl-neck silk blouse"></div>
+            <div class="info">
+              <span class="brand-name">Vince</span>
+              <p class="product-name">Cowl-Neck Silk Blouse</p>
+              <div class="prices"><span>$317</span><span class="dot">·</span><span class="strike">$360</span></div>
+              <div class="meta"><span>Editorialist</span><span class="dot">·</span><span class="pill-green">New</span></div>
+            </div>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </a>
+        </div>
+
+        <div class="row selected" data-id="earrings" data-price="59.5" data-retail="70">
+          <button class="check" aria-label="Toggle selection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+          <a class="product" href="https://www.ebay.com/itm/168016338417?phia_ref=07ed4330-148f-4d39-9455-bce73485fff4&amp;mkcid=1&amp;mkrid=711-53200-19255-0&amp;siteid=0&amp;campid=5339031575&amp;customid=%7B%7Bphia_merchant_product_url_id%7D%7D&amp;toolid=10001&amp;mkevt=1" target="_blank" rel="noopener noreferrer">
+            <div class="thumb"><img src="images/p4_earrings.png" alt="Gold knot stud earrings"></div>
+            <div class="info">
+              <span class="brand-name">Kendra Scott</span>
+              <p class="product-name">Gold Knot Stud Earrings</p>
+              <div class="prices"><span>$59.50</span><span class="dot">·</span><span class="strike">$70</span></div>
+              <div class="meta"><span>eBay</span><span class="dot">·</span><span class="pill-green">New</span></div>
+            </div>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </a>
+        </div>
+
+        <div class="row selected" data-id="skirt" data-price="0" data-retail="0">
+          <a class="product" href="#">
+            <div class="thumb"><img src="images/p2_blackskirt.png" alt="Black button mini skort"></div>
+            <div class="info">
+              <span class="brand-name">Acne Studios</span>
+              <p class="product-name">Wool-Blend Crepe Mini Skirt</p>
+              <p class="purchased-note">Purchased with Phia on 1/14/2026</p>
+            </div>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </a>
+        </div>
+
+        <div class="row selected" data-id="boot" data-price="0" data-retail="0">
+          <a class="product" href="#">
+            <div class="thumb"><img src="images/p3_boot.png" alt="Black knee-high heeled boots"></div>
+            <div class="info">
+              <span class="brand-name">I.N.C. International Concepts</span>
+              <p class="product-name">Knee-High Heeled Boots</p>
+              <p class="purchased-note">Purchased with Phia on 3/10/2026</p>
+            </div>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </a>
+        </div>
+
+        <div class="row selected birkin-promo" data-id="birkin" data-price="0" data-retail="0">
+          <a class="product" href="#">
+            <div class="thumb"><img src="images/p5_birkin.jpg" alt="Hermès Birkin"></div>
+            <p class="promo-text">Invite friends, win a Birkin</p>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <section class="summary">
+        <div class="summary-card">
+          <div class="tag-icon dark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+          </div>
+          <div class="summary-text">
+            <span class="summary-label">Full look retail</span>
+            <span class="summary-value black summary-retail">$430</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="tag-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+          </div>
+          <div class="summary-text">
+            <span class="summary-label">With Phia</span>
+            <span class="summary-value summary-deal">$376.50</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="floating-summary" aria-hidden="true">
+      <div class="fs-item">
+        <span class="fs-label">Items</span>
+        <span class="fs-value fs-count">5</span>
+      </div>
+      <span class="fs-divider"></span>
+      <div class="fs-item">
+        <span class="fs-label">Total</span>
+        <span class="fs-value green fs-total">$376.50</span>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <button class="back-pill" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15.5 19 8.5 12 15.5 5"></polyline>
+        </svg>
+      </button>
+      <button class="btn btn-primary">
+        <span class="shop-text">Shop items</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="6" y1="18" x2="18" y2="6"></line>
+          <polyline points="9 6 18 6 18 15"></polyline>
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const rows = document.querySelectorAll('.row');
+      const items = document.querySelectorAll('.collage .item');
+      const countLabel = document.querySelector('.item-count');
+      const fsCount = document.querySelector('.fs-count');
+      const fsTotal = document.querySelector('.fs-total');
+      const summaryRetail = document.querySelector('.summary-retail');
+      const summaryDeal = document.querySelector('.summary-deal');
+      const shopText = document.querySelector('.shop-text');
+      const scroller = document.querySelector('.scroll');
+      const floatBar = document.querySelector('.floating-summary');
+
+      const fmt = n => '$' + n.toLocaleString('en-US', {
+        minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
+        maximumFractionDigits: 2,
+      });
+
+      const recalc = () => {
+        let total = 0, retail = 0, count = 0;
+        rows.forEach(row => {
+          if (row.classList.contains('selected')) {
+            total += parseFloat(row.dataset.price) || 0;
+            retail += parseFloat(row.dataset.retail) || 0;
+            count += 1;
+          }
+        });
+        countLabel.textContent = count;
+        fsCount.textContent = count;
+        fsTotal.textContent = fmt(total);
+        summaryRetail.textContent = fmt(retail);
+        summaryDeal.textContent = fmt(total);
+        shopText.textContent = count === 1 ? 'Shop item' : 'Shop items';
+      };
+
+      rows.forEach(row => {
+        const check = row.querySelector('.check');
+        if (!check) return;
+        check.addEventListener('click', e => {
+          e.preventDefault();
+          row.classList.toggle('selected');
+          recalc();
+        });
+      });
+
+      // Tap a collage item → smooth-scroll to its row and flash it
+      items.forEach(node => {
+        node.addEventListener('click', () => {
+          const id = node.dataset.target;
+          const row = document.querySelector('.row[data-id="' + id + '"]');
+          if (!row) return;
+
+          node.classList.remove('pulse');
+          void node.offsetWidth;
+          node.classList.add('pulse');
+
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          row.classList.remove('flash');
+          void row.offsetWidth;
+          row.classList.add('flash');
+          setTimeout(() => row.classList.remove('flash'), 1000);
+        });
+      });
+
+      // Scroll-driven floating summary (matches pinpoint_v2)
+      const SHOW_AT = 24;
+      let visible = false;
+      const onScroll = () => {
+        const shouldShow = scroller.scrollTop > SHOW_AT;
+        if (shouldShow !== visible) {
+          visible = shouldShow;
+          floatBar.classList.toggle('visible', visible);
+          floatBar.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        }
+      };
+      scroller.addEventListener('scroll', onScroll, { passive: true });
+
+      recalc();
+    })();
+  </script>
+</body>
+</html>
